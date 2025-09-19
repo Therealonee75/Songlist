@@ -1,0 +1,101 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Sökbar låtlista</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; max-width:900px; margin:30px auto; }
+    input { width:100%; padding:10px; font-size:16px; margin-bottom:12px; }
+    ul { list-style:none; padding:0; }
+    li { padding:6px 8px; border-bottom:1px solid #eee; }
+    #qr { margin-top:12px; }
+    .download { margin-top:10px; display:inline-block; padding:6px 10px; background:#ddd; text-decoration:none; color:black; border-radius:4px; }
+  </style>
+</head>
+<body>
+  <h1>Sökbar låtlista</h1>
+  <input id="search" placeholder="Skriv för att söka (delord fungerar)..." autofocus>
+
+  <div>
+    <button id="toggleAll">Visa alla</button>
+    <a id="downloadBtn" class="download" href="#" download="latlista.csv">Ladda ner CSV</a>
+  </div>
+
+  <ul id="results"></ul>
+
+  <div id="qrContainer">
+    <p>QR till den här sidan (skanna för att öppna):</p>
+    <img id="qr" alt="QR kod" />
+  </div>
+
+<script>
+/* --- KListra in din lista här --- */
+const songs = [
+  "Låt Ett",
+  "Låt Två",
+  "Någon Annan Låt",
+  "Exempel Låt 2025"
+  // ... klistra in alla låtnamn i denna array, eller läs in från CSV/filer
+];
+/* ------------------------------- */
+
+const resultsEl = document.getElementById('results');
+const searchEl = document.getElementById('search');
+const downloadBtn = document.getElementById('downloadBtn');
+const toggleAllBtn = document.getElementById('toggleAll');
+const qrImg = document.getElementById('qr');
+
+function render(list){
+  resultsEl.innerHTML = '';
+  if(list.length === 0){
+    resultsEl.innerHTML = '<li>Inga träffar</li>';
+    return;
+  }
+  list.forEach(s => {
+    const li = document.createElement('li');
+    li.textContent = s;
+    resultsEl.appendChild(li);
+  });
+}
+
+// search (simple case-insensitive substring)
+function search(q){
+  q = q.trim().toLowerCase();
+  if(!q) return songs.slice();
+  return songs.filter(s => s.toLowerCase().includes(q));
+}
+
+searchEl.addEventListener('input', e => {
+  const results = search(e.target.value);
+  render(results);
+});
+
+// initial
+render(songs);
+
+// download CSV
+downloadBtn.addEventListener('click', e => {
+  const csvContent = songs.map(s => `"${s.replace(/"/g,'""')}"`).join('\n');
+  const blob = new Blob([csvContent], {type: 'text/csv'});
+  const url = URL.createObjectURL(blob);
+  downloadBtn.href = url;
+});
+
+// toggle show all
+toggleAllBtn.addEventListener('click', () => {
+  searchEl.value = '';
+  render(songs);
+  searchEl.focus();
+});
+
+// create QR that points to current page URL (if hosted)
+function makeQrForUrl(url){
+  const enc = encodeURIComponent(url);
+  // Using Google Chart API
+  qrImg.src = 'https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=' + enc;
+}
+// if page is hosted, create QR for it
+makeQrForUrl(window.location.href);
+</script>
+</body>
+</html>
